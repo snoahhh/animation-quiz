@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학교괴담: 열 개의 문</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Gothic+A1:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --ink:#0a0d0a;
+    --wall:#131a15;
+    --wall-2:#1e2820;
+    --wall-3:#2a352c;
+    --chalk:#e9e6d8;
+    --chalk-dim:#93998c;
+    --blood:#9c2b2b;
+    --blood-bright:#d8493c;
+    --ember:#d99a3b;
+    --ember-dim:#8a6224;
+    --ember-glow: rgba(217,154,59,0.55);
+    --blood-glow: rgba(216,73,60,0.55);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--chalk);
+    font-family:'Gothic A1', 'Noto Sans KR', sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3,.display{
+    font-family:'Song Myung', 'Nanum Myeongjo', serif;
+    text-wrap:balance;
+    letter-spacing:0.01em;
+  }
+
+  .mono{ font-family:'IBM Plex Mono', monospace; font-variant-numeric:tabular-nums; }
+
+  button{ font-family:inherit; }
+  button:focus-visible, .selectable:focus-visible{
+    outline: 2px solid var(--ember);
+    outline-offset: 3px;
+  }
+
+  /* ---------- stage & atmosphere ---------- */
+  .stage{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    align-items:stretch;
+    justify-content:center;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(60,75,60,0.35), transparent 55%),
+      radial-gradient(ellipse at 50% 115%, rgba(0,0,0,0.7), transparent 60%),
+      var(--ink);
+  }
+
+  .grain-layer{
+    position:fixed; inset:0; pointer-events:none; z-index:60;
+    opacity:0.05; mix-blend-mode:overlay;
+  }
+  .vignette{
+    position:fixed; inset:0; pointer-events:none; z-index:55;
+    box-shadow: inset 0 0 18vw 4vw rgba(0,0,0,0.85);
+  }
+  .flicker-layer{
+    position:fixed; inset:0; pointer-events:none; z-index:50;
+    background: rgba(180,200,170,0.03);
+    animation: flicker 6.5s infinite steps(1,end);
+  }
+  @keyframes flicker{
+    0%,19%,21%,48%,50%,71%,100%{opacity:1;}
+    20%{opacity:0.55;}
+    49%{opacity:0.25;}
+    49.5%{opacity:0.7;}
+    70%{opacity:0.6;}
+  }
+  .fog{
+    position:absolute; left:-20%; right:-20%; bottom:-6%; height:38vh; z-index:2;
+    background: radial-gradient(ellipse at 30% 100%, rgba(180,195,175,0.10), transparent 60%),
+                radial-gradient(ellipse at 70% 100%, rgba(180,195,175,0.08), transparent 65%);
+    filter: blur(2px);
+    animation: drift 22s ease-in-out infinite alternate;
+    pointer-events:none;
+  }
+  @keyframes drift{
+    0%{ transform:translateX(-3%) translateY(0); }
+    100%{ transform:translateX(3%) translateY(-1.5%); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .flicker-layer, .fog, .shake, .pulse-ember, .pulse-blood, .candle-flame{ animation:none !important; }
+  }
+
+  .frame{
+    position:relative; z-index:5;
+    width:100%; max-width:720px;
+    margin:0 auto;
+    padding: clamp(16px,4vw,32px);
+    display:flex; flex-direction:column;
+    min-height:100vh;
+  }
+
+  .screen{ display:none; flex-direction:column; flex:1; animation: fadein 0.5s ease; }
+  .screen.active{ display:flex; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ---------- intro ---------- */
+  #screen-intro{ justify-content:center; align-items:center; text-align:center; gap:22px; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; letter-spacing:0.28em; text-transform:uppercase;
+    color:var(--blood-bright);
+  }
+  #screen-intro h1{ font-size:clamp(30px,7vw,46px); margin:0; color:var(--chalk); line-height:1.3; }
+  #screen-intro h1 em{ font-style:normal; color:var(--ember); }
+  .lede{ color:var(--chalk-dim); font-size:15px; line-height:1.9; max-width:52ch; margin:0 auto; }
+  .lede strong{ color:var(--chalk); font-weight:700; }
+
+  .rules{
+    display:flex; gap:18px; flex-wrap:wrap; justify-content:center;
+    margin-top:4px;
+  }
+  .rule-chip{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 14px; border-radius:3px;
+    background:var(--wall); border:1px solid var(--wall-3);
+    font-size:13px; color:var(--chalk-dim);
+  }
+
+  .btn-primary{
+    margin-top:10px;
+    padding:16px 40px;
+    background: linear-gradient(180deg, #3a2a16, #241a0e);
+    border:1px solid var(--ember-dim);
+    color:var(--ember);
+    font-size:17px; font-weight:700; letter-spacing:0.03em;
+    border-radius:3px;
+    cursor:pointer;
+    box-shadow: 0 0 0 1px rgba(217,154,59,0.15), 0 8px 24px rgba(0,0,0,0.5);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 0 24px var(--ember-glow), 0 8px 24px rgba(0,0,0,0.5); }
+
+  .btn-secondary{
+    background:transparent; border:1px solid var(--wall-3); color:var(--chalk-dim);
+    padding:11px 22px; border-radius:3px; font-size:13px; cursor:pointer;
+  }
+  .btn-secondary:hover{ color:var(--chalk); border-color:var(--chalk-dim); }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding-bottom:16px; margin-bottom:8px;
+    border-bottom:1px solid var(--wall-3);
+  }
+  .door-label{ font-size:12px; color:var(--chalk-dim); letter-spacing:0.12em; }
+  .door-label .n{ color:var(--ember); font-size:16px; }
+
+  .candles{ display:flex; gap:10px; }
+  .candle{ width:16px; height:34px; position:relative; }
+  .candle .flame{
+    position:absolute; left:50%; top:-9px; width:9px; height:14px; transform:translateX(-50%);
+    background: radial-gradient(circle at 50% 70%, #fff2c9, var(--ember) 55%, var(--blood-bright) 100%);
+    border-radius:50% 50% 50% 50% / 65% 65% 35% 35%;
+    filter: drop-shadow(0 0 6px var(--ember-glow));
+    animation: candle-flame 1.6s ease-in-out infinite;
+  }
+  @keyframes candle-flame{ 0%,100%{ transform:translateX(-50%) scale(1) rotate(-2deg);} 50%{ transform:translateX(-50%) scale(1.08,0.94) rotate(2deg);} }
+  .candle .wax{
+    position:absolute; left:0; right:0; bottom:0; top:6px;
+    background: linear-gradient(180deg, #efe6d2, #cfc4a6);
+    border-radius:2px;
+  }
+  .candle.out .flame{ display:none; }
+  .candle.out .wax{ background: linear-gradient(180deg,#3a382f,#242219); }
+  .candle.out::after{
+    content:''; position:absolute; left:50%; top:-16px; width:2px; height:14px; transform:translateX(-50%);
+    background:linear-gradient(180deg, rgba(160,160,160,0.5), transparent);
+  }
+
+  .progress-row{ display:flex; gap:5px; flex-wrap:wrap; }
+  .dot{
+    width:20px; height:20px; border-radius:2px; border:1px solid var(--wall-3);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--chalk-dim);
+    background:var(--wall);
+  }
+  .dot.solved{ background:var(--ember-dim); border-color:var(--ember); color:#1a1206; }
+  .dot.failed{ background:var(--blood); border-color:var(--blood-bright); color:#2a0a0a; }
+  .dot.current{ box-shadow:0 0 0 2px var(--ember-glow); color:var(--chalk); }
+
+  /* ---------- door + card ---------- */
+  .door-wrap{ flex:1; display:flex; align-items:center; justify-content:center; padding:22px 0; }
+  .door{
+    position:relative;
+    width:min(88vw, 300px); height:min(60vh, 380px);
+    background: linear-gradient(100deg, #241c12 0%, #2f2417 45%, #1c150d 100%);
+    border:2px solid #17110a;
+    border-radius:4px 4px 2px 2px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.5);
+    flex-shrink:0;
+  }
+  .door::before, .door::after{
+    content:''; position:absolute; left:10%; right:10%; height:38%;
+    border:1px solid rgba(0,0,0,0.4);
+    background: linear-gradient(100deg, rgba(255,255,255,0.03), transparent 60%);
+    border-radius:2px;
+  }
+  .door::before{ top:8%; }
+  .door::after{ bottom:8%; }
+  .handle{
+    position:absolute; right:9%; top:50%; width:11px; height:11px; border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, #cbb27a, #6e5222 70%);
+    box-shadow:0 0 4px rgba(0,0,0,0.6);
+  }
+  .note{
+    position:relative; z-index:6;
+    width:100%; max-width:520px; margin:-64px auto 0;
+    background: repeating-linear-gradient(0deg, #efe9d6, #efe9d6 27px, #e5dfc9 28px);
+    color:#241f16;
+    padding:26px 24px 22px;
+    border-radius:2px;
+    transform:rotate(-0.6deg);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+  }
+  .note::before{
+    content:''; position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    width:16px; height:16px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #e9776b, #8a1f1f 75%);
+    box-shadow:0 2px 4px rgba(0,0,0,0.5);
+  }
+  .qtype-tag{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+    letter-spacing:0.14em; text-transform:uppercase; color:#6b5f45;
+    border:1px solid #b9ac83; padding:2px 8px; border-radius:2px; margin-bottom:10px;
+  }
+  .qtext{ font-size:17px; line-height:1.6; font-weight:700; margin:0 0 16px; }
+
+  .options{ display:flex; flex-direction:column; gap:9px; }
+  .opt-btn{
+    text-align:left; padding:12px 14px; border-radius:2px; cursor:pointer;
+    background:#e4ddc4; border:1px solid #b9ac83; color:#241f16; font-size:14.5px;
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .opt-btn .k{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:#6b5f45; }
+  .opt-btn:hover:not(:disabled){ background:#d8cfab; }
+  .opt-btn:disabled{ cursor:default; }
+  .opt-btn.pick-correct{ background:#c9d4a6; border-color:#6c8a3f; }
+  .opt-btn.pick-wrong{ background:#dcb2ac; border-color:#9c2b2b; }
+
+  .ox-row{ display:flex; gap:14px; }
+  .ox-btn{
+    flex:1; padding:22px 10px; font-size:26px; font-weight:900; border-radius:3px; cursor:pointer;
+    border:2px solid #b9ac83; background:#e4ddc4; color:#241f16;
+  }
+  .ox-btn:hover:not(:disabled){ background:#d8cfab; }
+  .ox-btn:disabled{ cursor:default; }
+  .ox-btn.pick-correct{ background:#c9d4a6; border-color:#6c8a3f; }
+  .ox-btn.pick-wrong{ background:#dcb2ac; border-color:#9c2b2b; }
+
+  .legend{
+    display:flex; flex-wrap:wrap; gap:7px 14px; margin-bottom:14px;
+    font-size:12.5px; padding:10px 12px; background:rgba(0,0,0,0.05); border-radius:2px;
+  }
+  .legend .k{ font-family:'IBM Plex Mono',monospace; font-weight:700; margin-right:4px; }
+
+  .match-row{
+    display:flex; align-items:center; gap:10px; margin-bottom:8px;
+    padding:8px 10px; background:rgba(0,0,0,0.04); border-radius:2px;
+  }
+  .match-row .label{ flex:1; font-size:14px; font-weight:700; }
+  .letter-set{ display:flex; gap:6px; }
+  .letter-btn{
+    width:30px; height:30px; border-radius:50%; cursor:pointer;
+    border:1px solid #b9ac83; background:#e4ddc4; color:#241f16;
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px;
+  }
+  .letter-btn.chosen{ background:var(--ember); border-color:var(--ember-dim); color:#1a1206; }
+  .letter-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  .order-grid{ display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
+  .order-card{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 14px; border-radius:2px; cursor:pointer;
+    background:#e4ddc4; border:1px solid #b9ac83; color:#241f16; font-size:14px;
+  }
+  .order-card .badge{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700;
+    background:#b9ac83; color:#efe9d6;
+  }
+  .order-card.picked .badge{ background:var(--ember); color:#1a1206; }
+  .order-card.picked{ background:#d8cfab; }
+  .order-card.disabled{ opacity:0.5; cursor:not-allowed; }
+
+  .confirm-row{ display:flex; gap:10px; margin-top:4px; }
+  .btn-confirm{
+    flex:1; padding:12px; border-radius:2px; border:1px solid #6c8a3f; background:#c9d4a6;
+    color:#1c2712; font-weight:700; cursor:pointer;
+  }
+  .btn-confirm:disabled{ opacity:0.4; cursor:not-allowed; }
+  .btn-reset{
+    padding:12px 16px; border-radius:2px; border:1px solid #b9ac83; background:transparent;
+    color:#6b5f45; cursor:pointer; font-size:13px;
+  }
+
+  .feedback{
+    margin-top:14px; padding:12px 14px; border-radius:2px; font-size:13.5px; line-height:1.6;
+    display:none;
+  }
+  .feedback.show{ display:block; animation: fadein 0.3s ease; }
+  .feedback.good{ background:#dfe8c4; border:1px solid #6c8a3f; color:#26330f; }
+  .feedback.bad{ background:#e6c2bd; border:1px solid #9c2b2b; color:#3a0f0f; }
+  .feedback .head{ font-weight:900; margin-bottom:3px; }
+
+  .next-row{ margin-top:12px; text-align:right; }
+  .btn-next{
+    padding:10px 20px; border-radius:2px; border:1px solid #241f16; background:#241f16;
+    color:#efe9d6; font-weight:700; cursor:pointer; font-size:13.5px;
+  }
+
+  .shake{ animation: shake 0.5s ease; }
+  @keyframes shake{
+    10%,90%{ transform:translateX(-1px); }
+    20%,80%{ transform:translateX(2px); }
+    30%,50%,70%{ transform:translateX(-6px); }
+    40%,60%{ transform:translateX(6px); }
+  }
+  .pulse-blood{ animation: pulse-blood 0.6s ease; }
+  @keyframes pulse-blood{ 0%{ box-shadow:0 0 0 0 var(--blood-glow);} 100%{ box-shadow:0 0 60px 20px transparent;} }
+  .pulse-ember{ animation: pulse-ember 0.6s ease; }
+  @keyframes pulse-ember{ 0%{ box-shadow:0 0 0 0 var(--ember-glow);} 100%{ box-shadow:0 0 60px 20px transparent;} }
+
+  .flash{
+    position:fixed; inset:0; pointer-events:none; z-index:40; opacity:0;
+  }
+  .flash.blood{ background:radial-gradient(ellipse at 50% 50%, var(--blood-glow), transparent 70%); }
+  .flash.ember{ background:radial-gradient(ellipse at 50% 50%, var(--ember-glow), transparent 70%); }
+  .flash.play{ animation: flashfade 0.7s ease; }
+  @keyframes flashfade{ 0%{opacity:1;} 100%{opacity:0;} }
+
+  /* ---------- end screens ---------- */
+  #screen-fail, #screen-success{ justify-content:center; align-items:center; text-align:center; gap:18px; }
+  .end-icon{ font-size:64px; line-height:1; filter: drop-shadow(0 0 18px currentColor); }
+  #screen-fail .end-icon{ color:var(--blood-bright); }
+  #screen-success .end-icon{ color:var(--ember); }
+  .end-title{ font-size:clamp(28px,6vw,42px); margin:0; }
+  #screen-fail .end-title{ color:var(--blood-bright); }
+  #screen-success .end-title{ color:var(--ember); }
+  .end-copy{ color:var(--chalk-dim); font-size:14.5px; line-height:1.8; max-width:46ch; }
+  .end-stats{
+    display:flex; gap:22px; margin:6px 0;
+    font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--chalk-dim);
+  }
+  .end-stats b{ display:block; font-size:22px; color:var(--chalk); }
+
+  body:has(#screen-fail.active) .vignette{
+    box-shadow: inset 0 0 20vw 6vw rgba(90,10,10,0.55);
+  }
+  body:has(#screen-success.active) .vignette{
+    box-shadow: inset 0 0 20vw 6vw rgba(120,80,20,0.2);
+  }
+
+  @media (max-width:480px){
+    .ox-row{ flex-direction:row; }
+    .note{ padding:20px 16px; }
+  }
+
+  .sound-toggle{
+    position:fixed; top:16px; right:16px; z-index:70;
+    width:38px; height:38px; border-radius:50%;
+    background:var(--wall); border:1px solid var(--wall-3); color:var(--chalk-dim);
+    font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sound-toggle:hover{ color:var(--chalk); border-color:var(--chalk-dim); }
+  .sound-toggle.muted{ color:var(--blood-bright); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="grain" class="grain-layer"></canvas>
+  <div class="vignette"></div>
+  <div class="flicker-layer"></div>
+  <div class="fog"></div>
+
+  <div class="flash" id="flash"></div>
+
+  <button class="sound-toggle" id="sound-toggle" type="button" aria-label="소리 끄기/켜기">🔊</button>
+
+  <div class="frame">
+
+    <section id="screen-intro" class="screen active">
+      <div class="eyebrow">학교괴담 · 애니메이션 동아리실</div>
+      <h1>야자 시간, <em>문이 잠겼다</em></h1>
+      <p class="lede">
+        스톱모션 작품을 마무리하려 동아리실에 혼자 남았다. 정신을 차려보니 복도의 불은 하나둘 꺼져 있고,
+        모든 문이 잠겨 있다. 칠판 구석에는 선생님이 남긴 낡은 수업 노트 한 장. <strong>이 노트 속 문제를 풀어야만
+        문이 열린다</strong>는 소문이 있다.
+      </p>
+      <p class="lede">
+        가진 것은 <strong>촛불 세 자루</strong>뿐. 틀릴 때마다 하나씩 꺼진다.
+        촛불이 모두 꺼지기 전에, <strong>열 개의 문</strong>을 통과해 이곳을 빠져나가라.
+      </p>
+      <div class="rules">
+        <div class="rule-chip">🕯️ 목숨 3개</div>
+        <div class="rule-chip">🚪 문 10개</div>
+        <div class="rule-chip">❓ OX · 5지선다 · 줄긋기 · 순서맞추기</div>
+      </div>
+      <button class="btn-primary" id="btn-start">동아리실을 나선다 →</button>
+    </section>
+
+    <section id="screen-game" class="screen">
+      <div id="hud">
+        <div>
+          <div class="door-label">지금 서 있는 곳</div>
+          <div class="door-label"><span class="n mono" id="door-index">01</span> / 10번째 문</div>
+        </div>
+        <div class="candles" id="candles"></div>
+      </div>
+      <div class="progress-row" id="progress-row"></div>
+
+      <div class="door-wrap">
+        <div class="door" id="door">
+          <div class="handle"></div>
+        </div>
+      </div>
+
+      <div class="note" id="note">
+        <div class="qtype-tag" id="qtype-tag">TYPE</div>
+        <p class="qtext" id="qtext"></p>
+        <div id="qbody"></div>
+        <div class="feedback" id="feedback">
+          <div class="head" id="fb-head"></div>
+          <div id="fb-body"></div>
+        </div>
+        <div class="next-row" id="next-row" style="display:none;">
+          <button class="btn-next" id="btn-next">다음 문으로 →</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-fail" class="screen">
+      <div class="end-icon">👻</div>
+      <h2 class="end-title">탈출 실패</h2>
+      <p class="end-copy">마지막 촛불이 꺼졌다. 복도 저편에서, 누군가 당신의 이름을 부르는 소리가 들린다...</p>
+      <div class="end-stats">
+        <div><b id="fail-doors">0</b>통과한 문</div>
+      </div>
+      <button class="btn-primary" id="btn-retry-fail">다시 도전하기</button>
+      <button class="btn-secondary" id="btn-home-fail">동아리실 앞으로</button>
+    </section>
+
+    <section id="screen-success" class="screen">
+      <div class="end-icon">🕯️</div>
+      <h2 class="end-title">탈출 성공</h2>
+      <p class="end-copy">마지막 문이 삐걱이며 열리고, 복도 끝에서 새벽빛이 스며든다. 당신은 무사히 빠져나왔다.</p>
+      <div class="end-stats">
+        <div><b id="success-lives">0</b>남은 촛불</div>
+        <div><b>10</b>통과한 문</div>
+      </div>
+      <button class="btn-primary" id="btn-retry-success">다시 도전하기</button>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var QUESTIONS = [
+    {
+      type:'ox',
+      q:"애니메이션(Animation)이라는 말은 라틴어 'anima(생명, 영혼)'에서 유래했다.",
+      answer:true,
+      explain:"정답은 O. 애니메이션은 그림이나 사물에 생명을 불어넣는 예술이라는 뜻에서 출발했어요."
+    },
+    {
+      type:'mc5',
+      q:"일반적으로 '풀 애니메이션(Full Animation)'은 1초에 몇 장의 그림을 사용할까?",
+      options:["8장","12장","18장","24장","30장"],
+      answerIndex:3,
+      explain:"정답은 24장. 풀 애니메이션은 1초에 약 24장의 프레임을 사용해 가장 자연스러운 움직임을 만들어요."
+    },
+    {
+      type:'match',
+      q:"애니메이션 역사 속 발명품과 그 특징을 알맞게 연결하라.",
+      left:["소마트로프","페나키스토스코프","조에트로프","프락시노스코프"],
+      right:[
+        "원판 양면에 그림을 그려 실을 매달아 돌리며 봄",
+        "'경이로운 원판'이라는 뜻의 회전 원판 장치",
+        "원통 안에 그림을 넣고 돌려 틈새로 관찰",
+        "원통 안에 그림을 넣고 돌려 가운데 거울로 관찰"
+      ],
+      explain:"소마트로프(1826) - 실로 돌리는 원판 / 페나키스토스코프(1832) - 경이로운 회전 원판 / 조에트로프(1834) - 원통 틈새 관찰 / 프락시노스코프(1876) - 원통 거울 관찰."
+    },
+    {
+      type:'ox',
+      q:"리미티드 애니메이션(Limited Animation)은 풀 애니메이션보다 더 자연스러운 움직임을 만든다.",
+      answer:false,
+      explain:"정답은 X. 리미티드 애니메이션은 1초에 8~12장만 사용해 풀 애니메이션보다 움직임이 부자연스러워요."
+    },
+    {
+      type:'mc5',
+      q:"다음 중 이 수업에서 배운 애니메이션의 '종류'가 아닌 것은?",
+      options:["2D 셀 애니메이션","3D CG 애니메이션","스톱모션 애니메이션","그림자 애니메이션","라이브 액션 애니메이션"],
+      answerIndex:4,
+      explain:"정답은 라이브 액션 애니메이션. 수업에서 배운 종류는 2D 셀, 3D CG, 스톱모션, 그림자 애니메이션 네 가지였어요."
+    },
+    {
+      type:'order',
+      q:"스톱모션 애니메이션이 만들어지는 순서대로, 카드를 순서에 맞게 눌러라.",
+      items:["사물을 조금 움직이기","사진 한 장 찍기","여러 번 반복하기","이어서 빠르게 재생"],
+      explain:"정답 순서: 사물을 조금 움직이기 → 사진 한 장 찍기 → 여러 번 반복하기 → 이어서 빠르게 재생."
+    },
+    {
+      type:'match',
+      q:"애니메이션의 종류와 설명을 알맞게 연결하라.",
+      left:["2D 셀 애니메이션","3D CG 애니메이션","스톱모션 애니메이션","그림자 애니메이션"],
+      right:[
+        "투명 셀룰로이드지에 그림을 그려 만듦",
+        "컴퓨터 프로그램으로 캐릭터를 만들어 제작",
+        "인형·클레이·사물을 조금씩 움직이며 촬영",
+        "빛을 비춰 생긴 그림자를 조금씩 움직여 촬영"
+      ],
+      explain:"2D 셀 - 셀룰로이드지 / 3D CG - 컴퓨터 프로그램 / 스톱모션 - 인형·클레이 촬영 / 그림자 애니메이션 - 빛과 그림자."
+    },
+    {
+      type:'ox',
+      q:"스톱모션을 촬영할 때는 카메라와 조명을 고정해야 한다.",
+      answer:true,
+      explain:"정답은 O. 카메라와 조명이 흔들리거나 바뀌면 화면이 흔들리거나 깜빡여 보여요."
+    },
+    {
+      type:'mc5',
+      q:"무료로 쓸 수 있는 스톱모션 앱 중, 초보자에게 가장 추천되는 '추천 1순위' 앱은?",
+      options:["FlipaClip","iKITMovie","Stop Motion Studio","Procreate","Adobe Premiere"],
+      answerIndex:2,
+      explain:"정답은 Stop Motion Studio. 여러 플랫폼을 지원하고 무료로 촬영·편집이 가능해 초보자에게 가장 좋아요."
+    },
+    {
+      type:'ox',
+      q:"촬영한 사진의 순서가 뒤바뀌어도 편집 결과물은 자연스럽게 보인다.",
+      answer:false,
+      explain:"정답은 X. 사진 순서가 뒤바뀌면 움직임이 이상해 보여요. 촬영한 순서대로 정렬해야 해요."
+    }
+  ];
+
+  var AudioEngine = (function(){
+    var ctx = null, master = null, ambientGain = null, reverb = null;
+    var ambientStarted = false, clangTimer = null, muted = false;
+
+    try{ muted = localStorage.getItem('schoolhorror_muted') === '1'; }catch(e){}
+
+    function ensureCtx(){
+      if(ctx) return;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = muted ? 0 : 0.9;
+      master.connect(ctx.destination);
+    }
+
+    function resume(){
+      ensureCtx();
+      if(ctx && ctx.state === 'suspended') ctx.resume();
+    }
+
+    function setMuted(v){
+      muted = v;
+      try{ localStorage.setItem('schoolhorror_muted', v ? '1' : '0'); }catch(e){}
+      if(ctx && master) master.gain.setTargetAtTime(muted ? 0 : 0.9, ctx.currentTime, 0.05);
+    }
+
+    function noiseBuffer(duration){
+      var len = Math.floor(ctx.sampleRate * duration);
+      var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      var data = buf.getChannelData(0);
+      for(var i=0;i<len;i++) data[i] = Math.random()*2-1;
+      return buf;
+    }
+
+    function impulseBuffer(duration, decay){
+      var len = Math.floor(ctx.sampleRate * duration);
+      var buf = ctx.createBuffer(2, len, ctx.sampleRate);
+      for(var ch=0; ch<2; ch++){
+        var data = buf.getChannelData(ch);
+        for(var i=0;i<len;i++) data[i] = (Math.random()*2-1) * Math.pow(1 - i/len, decay);
+      }
+      return buf;
+    }
+
+    function getReverb(){
+      if(!reverb){
+        reverb = ctx.createConvolver();
+        reverb.buffer = impulseBuffer(2.2, 3);
+        reverb.connect(master);
+      }
+      return reverb;
+    }
+
+    function scheduleClang(){
+      clearTimeout(clangTimer);
+      clangTimer = setTimeout(function(){
+        if(ambientStarted) playDistantClang();
+        scheduleClang();
+      }, 9000 + Math.random()*9000);
+    }
+
+    function playDistantClang(){
+      var t = ctx.currentTime;
+      var o = ctx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = 180 + Math.random()*120;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.16, t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+1.6);
+      var bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = 600; bp.Q.value = 1.2;
+      o.connect(bp); bp.connect(g); g.connect(ambientGain);
+      o.start(t); o.stop(t+1.7);
+    }
+
+    function startAmbient(){
+      ensureCtx();
+      if(!ctx || ambientStarted) return;
+      ambientStarted = true;
+
+      ambientGain = ctx.createGain();
+      ambientGain.gain.value = 0;
+      ambientGain.connect(master);
+
+      var lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 340;
+      lp.Q.value = 0.7;
+      lp.connect(ambientGain);
+
+      [55, 55*1.008, 82.5].forEach(function(f){
+        var o = ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = f;
+        var g = ctx.createGain();
+        g.gain.value = 0.33;
+        o.connect(g); g.connect(lp);
+        o.start();
+      });
+
+      var lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.06;
+      var lfoGain = ctx.createGain();
+      lfoGain.gain.value = 140;
+      lfo.connect(lfoGain); lfoGain.connect(lp.frequency);
+      lfo.start();
+
+      setAmbientLevel(0.05, 1.2);
+      scheduleClang();
+    }
+
+    function setAmbientLevel(target, timeConst){
+      if(!ambientGain || !ctx) return;
+      ambientGain.gain.setTargetAtTime(target, ctx.currentTime, timeConst || 1.0);
+    }
+
+    function playCorrect(){
+      if(!ctx) return;
+      var t = ctx.currentTime;
+      var rv = getReverb();
+      [880, 1318.5].forEach(function(f, i){
+        var o = ctx.createOscillator();
+        o.type = 'triangle';
+        o.frequency.value = f;
+        var g = ctx.createGain();
+        var start = t + i*0.09;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.linearRampToValueAtTime(0.22, start+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, start+0.9);
+        var send = ctx.createGain(); send.gain.value = 0.4;
+        o.connect(g); g.connect(master); g.connect(send); send.connect(rv);
+        o.start(start); o.stop(start+0.95);
+      });
+    }
+
+    function playWrong(){
+      if(!ctx) return;
+      var t = ctx.currentTime;
+      [140, 151].forEach(function(f){
+        var o = ctx.createOscillator();
+        o.type = 'sawtooth';
+        o.frequency.value = f;
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.16, t+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+0.35);
+        o.connect(g); g.connect(master);
+        o.start(t); o.stop(t+0.4);
+      });
+      var thud = ctx.createOscillator();
+      thud.type = 'sine';
+      thud.frequency.setValueAtTime(90, t);
+      thud.frequency.exponentialRampToValueAtTime(40, t+0.25);
+      var tg = ctx.createGain();
+      tg.gain.setValueAtTime(0.3, t);
+      tg.gain.exponentialRampToValueAtTime(0.0001, t+0.3);
+      thud.connect(tg); tg.connect(master);
+      thud.start(t); thud.stop(t+0.3);
+    }
+
+    function playDoorCreak(){
+      if(!ctx) return;
+      var t = ctx.currentTime;
+      var src = ctx.createBufferSource();
+      src.buffer = noiseBuffer(0.7);
+      var bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.Q.value = 6;
+      bp.frequency.setValueAtTime(300, t);
+      bp.frequency.exponentialRampToValueAtTime(1400, t+0.55);
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.18, t+0.1);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.7);
+      src.connect(bp); bp.connect(g); g.connect(master);
+      src.start(t); src.stop(t+0.75);
+    }
+
+    function playFailSting(){
+      if(!ctx) return;
+      var t = ctx.currentTime;
+      var o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(220, t);
+      o.frequency.exponentialRampToValueAtTime(55, t+1.3);
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.28, t+0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+1.5);
+      var lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 900;
+      o.connect(lp); lp.connect(g); g.connect(master);
+      o.start(t); o.stop(t+1.55);
+
+      var src = ctx.createBufferSource();
+      src.buffer = noiseBuffer(1.5);
+      var ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.0001, t);
+      ng.gain.linearRampToValueAtTime(0.1, t+0.05);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t+1.4);
+      var nlp = ctx.createBiquadFilter();
+      nlp.type = 'lowpass'; nlp.frequency.value = 400;
+      src.connect(nlp); nlp.connect(ng); ng.connect(master);
+      src.start(t); src.stop(t+1.5);
+    }
+
+    function playSuccessChime(){
+      if(!ctx) return;
+      var t = ctx.currentTime;
+      var rv = getReverb();
+      [523.25, 659.25, 783.99, 1046.5].forEach(function(f, i){
+        var o = ctx.createOscillator();
+        o.type = 'triangle';
+        o.frequency.value = f;
+        var g = ctx.createGain();
+        var start = t + i*0.14;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.linearRampToValueAtTime(0.2, start+0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, start+1.4);
+        var send = ctx.createGain(); send.gain.value = 0.5;
+        o.connect(g); g.connect(master); g.connect(send); send.connect(rv);
+        o.start(start); o.stop(start+1.45);
+      });
+    }
+
+    return {
+      resume: resume,
+      startAmbient: startAmbient,
+      setAmbientLevel: setAmbientLevel,
+      correct: function(){ playCorrect(); setTimeout(playDoorCreak, 120); },
+      wrong: playWrong,
+      fail: function(){ setAmbientLevel(0, 1.2); playFailSting(); },
+      success: function(){ setAmbientLevel(0, 1.0); playSuccessChime(); },
+      toggleMute: function(){ setMuted(!muted); return muted; },
+      isMuted: function(){ return muted; }
+    };
+  })();
+
+  var state = { index:0, lives:3, doorsPassed:0, nextTimer:null };
+
+  var els = {
+    intro: document.getElementById('screen-intro'),
+    game: document.getElementById('screen-game'),
+    fail: document.getElementById('screen-fail'),
+    success: document.getElementById('screen-success'),
+    doorIndex: document.getElementById('door-index'),
+    candles: document.getElementById('candles'),
+    progressRow: document.getElementById('progress-row'),
+    door: document.getElementById('door'),
+    qtypeTag: document.getElementById('qtype-tag'),
+    qtext: document.getElementById('qtext'),
+    qbody: document.getElementById('qbody'),
+    feedback: document.getElementById('feedback'),
+    fbHead: document.getElementById('fb-head'),
+    fbBody: document.getElementById('fb-body'),
+    nextRow: document.getElementById('next-row'),
+    btnNext: document.getElementById('btn-next'),
+    flash: document.getElementById('flash'),
+    failDoors: document.getElementById('fail-doors'),
+    successLives: document.getElementById('success-lives')
+  };
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function showScreen(name){
+    [els.intro, els.game, els.fail, els.success].forEach(function(s){ s.classList.remove('active'); });
+    els[name].classList.add('active');
+  }
+
+  function flash(kind){
+    els.flash.className = 'flash ' + kind;
+    void els.flash.offsetWidth;
+    els.flash.classList.add('play');
+  }
+
+  function buildProgressRow(){
+    els.progressRow.innerHTML = '';
+    for(var i=0;i<QUESTIONS.length;i++){
+      var d = document.createElement('div');
+      d.className = 'dot';
+      d.textContent = String(i+1);
+      d.id = 'dot-' + i;
+      els.progressRow.appendChild(d);
+    }
+  }
+
+  function buildCandles(){
+    els.candles.innerHTML = '';
+    for(var i=0;i<3;i++){
+      var c = document.createElement('div');
+      c.className = 'candle';
+      c.id = 'candle-' + i;
+      c.innerHTML = '<div class="flame"></div><div class="wax"></div>';
+      els.candles.appendChild(c);
+    }
+  }
+
+  function updateHud(){
+    els.doorIndex.textContent = String(state.index+1).padStart(2,'0');
+    for(var i=0;i<QUESTIONS.length;i++){
+      var dot = document.getElementById('dot-'+i);
+      dot.classList.remove('current');
+      if(i === state.index) dot.classList.add('current');
+    }
+    for(var c=0;c<3;c++){
+      var candle = document.getElementById('candle-'+c);
+      if(c < (3-state.lives)) candle.classList.add('out');
+      else candle.classList.remove('out');
+    }
+  }
+
+  function typeLabel(type){
+    return { ox:'OX 문제', mc5:'5지선다', match:'줄긋기', order:'순서 맞추기' }[type] || type;
+  }
+
+  function renderQuestion(){
+    els.feedback.className = 'feedback';
+    els.nextRow.style.display = 'none';
+    var q = QUESTIONS[state.index];
+    els.qtypeTag.textContent = typeLabel(q.type);
+    els.qtext.textContent = q.q;
+    els.qbody.innerHTML = '';
+    updateHud();
+
+    if(q.type === 'ox') renderOx(q);
+    else if(q.type === 'mc5') renderMc5(q);
+    else if(q.type === 'match') renderMatch(q);
+    else if(q.type === 'order') renderOrder(q);
+  }
+
+  function lockInputs(){
+    var inputs = els.qbody.querySelectorAll('button');
+    inputs.forEach(function(b){ b.disabled = true; });
+  }
+
+  function renderOx(q){
+    var row = document.createElement('div');
+    row.className = 'ox-row';
+    ['O','X'].forEach(function(label, idx){
+      var btn = document.createElement('button');
+      btn.className = 'ox-btn';
+      btn.textContent = label;
+      btn.addEventListener('click', function(){
+        var picked = (idx === 0);
+        var correct = picked === q.answer;
+        btn.classList.add(correct ? 'pick-correct' : 'pick-wrong');
+        if(!correct){
+          if(q.answer === true) row.children[0].classList.add('pick-correct');
+          else row.children[1].classList.add('pick-correct');
+        }
+        lockInputs();
+        onAnswered(correct, q);
+      });
+      row.appendChild(btn);
+    });
+    els.qbody.appendChild(row);
+  }
+
+  function renderMc5(q){
+    var wrap = document.createElement('div');
+    wrap.className = 'options';
+    var letters = ['A','B','C','D','E'];
+    q.options.forEach(function(opt, idx){
+      var btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerHTML = '<span class="k">' + letters[idx] + '</span><span>' + opt + '</span>';
+      btn.addEventListener('click', function(){
+        var correct = idx === q.answerIndex;
+        btn.classList.add(correct ? 'pick-correct' : 'pick-wrong');
+        if(!correct){
+          wrap.children[q.answerIndex].classList.add('pick-correct');
+        }
+        lockInputs();
+        onAnswered(correct, q);
+      });
+      wrap.appendChild(btn);
+    });
+    els.qbody.appendChild(wrap);
+  }
+
+  function renderMatch(q){
+    var order = shuffle([0,1,2,3]);
+    var legend = document.createElement('div');
+    legend.className = 'legend';
+    var letters = ['A','B','C','D'];
+    order.forEach(function(origIdx, pos){
+      var span = document.createElement('span');
+      span.innerHTML = '<span class="k">' + letters[pos] + '.</span>' + q.right[origIdx];
+      legend.appendChild(span);
+    });
+    els.qbody.appendChild(legend);
+
+    var selections = [null,null,null,null];
+    var rows = [];
+
+    q.left.forEach(function(labelText, leftIdx){
+      var row = document.createElement('div');
+      row.className = 'match-row';
+      var label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = (leftIdx+1) + '. ' + labelText;
+      row.appendChild(label);
+      var set = document.createElement('div');
+      set.className = 'letter-set';
+      letters.forEach(function(L, pos){
+        var b = document.createElement('button');
+        b.className = 'letter-btn';
+        b.textContent = L;
+        b.addEventListener('click', function(){
+          selections[leftIdx] = pos;
+          set.querySelectorAll('.letter-btn').forEach(function(bb,i){
+            bb.classList.toggle('chosen', i===pos);
+          });
+          checkReady();
+        });
+        set.appendChild(b);
+      });
+      row.appendChild(set);
+      els.qbody.appendChild(row);
+      rows.push(row);
+    });
+
+    var confirmRow = document.createElement('div');
+    confirmRow.className = 'confirm-row';
+    var confirmBtn = document.createElement('button');
+    confirmBtn.className = 'btn-confirm';
+    confirmBtn.textContent = '확인';
+    confirmBtn.disabled = true;
+    confirmRow.appendChild(confirmBtn);
+    els.qbody.appendChild(confirmRow);
+
+    function checkReady(){
+      confirmBtn.disabled = selections.some(function(s){ return s===null; });
+    }
+
+    confirmBtn.addEventListener('click', function(){
+      var allCorrect = selections.every(function(pos, leftIdx){
+        return order[pos] === leftIdx;
+      });
+      rows.forEach(function(row, leftIdx){
+        var pos = selections[leftIdx];
+        var isRight = order[pos] === leftIdx;
+        row.style.background = isRight ? '#c9d4a6' : '#dcb2ac';
+      });
+      els.qbody.querySelectorAll('.letter-btn').forEach(function(b){ b.disabled = true; });
+      confirmBtn.disabled = true;
+      onAnswered(allCorrect, q);
+    });
+  }
+
+  function renderOrder(q){
+    var order = shuffle([0,1,2,3]);
+    var wrap = document.createElement('div');
+    wrap.className = 'order-grid';
+    var picks = [];
+    var cards = [];
+
+    order.forEach(function(origIdx){
+      var card = document.createElement('div');
+      card.className = 'order-card';
+      var badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = '';
+      var text = document.createElement('span');
+      text.textContent = q.items[origIdx];
+      card.appendChild(badge);
+      card.appendChild(text);
+      card.dataset.orig = origIdx;
+      card.addEventListener('click', function(){
+        if(card.classList.contains('picked')) return;
+        picks.push(origIdx);
+        badge.textContent = String(picks.length);
+        card.classList.add('picked');
+        if(picks.length === q.items.length){
+          cards.forEach(function(c){ if(!c.classList.contains('picked')) c.classList.add('disabled'); });
+          finalize();
+        }
+      });
+      wrap.appendChild(card);
+      cards.push(card);
+    });
+    els.qbody.appendChild(wrap);
+
+    var resetRow = document.createElement('div');
+    resetRow.className = 'confirm-row';
+    var resetBtn = document.createElement('button');
+    resetBtn.className = 'btn-reset';
+    resetBtn.textContent = '다시 선택';
+    resetBtn.addEventListener('click', function(){
+      picks.length = 0;
+      cards.forEach(function(c){
+        c.classList.remove('picked','disabled');
+        c.querySelector('.badge').textContent = '';
+      });
+    });
+    resetRow.appendChild(resetBtn);
+    els.qbody.appendChild(resetRow);
+
+    function finalize(){
+      var correct = picks.every(function(v,i){ return v === i; });
+      cards.forEach(function(c){
+        c.style.background = correct ? '#c9d4a6' : '#dcb2ac';
+      });
+      resetBtn.disabled = true;
+      onAnswered(correct, q);
+    }
+  }
+
+  function onAnswered(correct, q){
+    els.feedback.classList.add('show');
+    if(correct){
+      els.feedback.classList.add('good');
+      els.fbHead.textContent = '문이 흔들리며 열린다...';
+      flash('ember');
+      els.door.parentElement.classList.add('pulse-ember');
+      document.getElementById('dot-'+state.index).classList.add('solved');
+      state.doorsPassed++;
+      AudioEngine.correct();
+    } else {
+      els.feedback.classList.add('bad');
+      els.fbHead.textContent = '차가운 공기가 스친다. 틀렸다.';
+      flash('blood');
+      els.door.parentElement.classList.add('shake');
+      document.getElementById('dot-'+state.index).classList.add('failed');
+      state.lives--;
+      updateHud();
+      AudioEngine.wrong();
+    }
+    els.fbBody.textContent = q.explain;
+
+    setTimeout(function(){
+      els.door.parentElement.classList.remove('pulse-ember','shake');
+    }, 650);
+
+    if(state.lives <= 0){
+      els.nextRow.style.display = 'none';
+      state.nextTimer = setTimeout(goToFail, 1700);
+      return;
+    }
+
+    els.nextRow.style.display = 'block';
+    els.btnNext.onclick = function(){
+      clearTimeout(state.nextTimer);
+      advance();
+    };
+    state.nextTimer = setTimeout(advance, correct ? 1300 : 2000);
+  }
+
+  function advance(){
+    clearTimeout(state.nextTimer);
+    state.index++;
+    if(state.index >= QUESTIONS.length){
+      goToSuccess();
+    } else {
+      renderQuestion();
+    }
+  }
+
+  function goToFail(){
+    els.failDoors.textContent = String(state.doorsPassed);
+    showScreen('fail');
+    AudioEngine.fail();
+  }
+
+  function goToSuccess(){
+    els.successLives.textContent = String(state.lives);
+    showScreen('success');
+    AudioEngine.success();
+  }
+
+  function startGame(){
+    clearTimeout(state.nextTimer);
+    state.index = 0;
+    state.lives = 3;
+    state.doorsPassed = 0;
+    buildProgressRow();
+    buildCandles();
+    showScreen('game');
+    renderQuestion();
+    AudioEngine.resume();
+    AudioEngine.startAmbient();
+    AudioEngine.setAmbientLevel(0.05, 1.0);
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-retry-fail').addEventListener('click', startGame);
+  document.getElementById('btn-retry-success').addEventListener('click', startGame);
+  document.getElementById('btn-home-fail').addEventListener('click', function(){ showScreen('intro'); });
+
+  var soundToggle = document.getElementById('sound-toggle');
+  function refreshSoundToggle(){
+    var m = AudioEngine.isMuted();
+    soundToggle.textContent = m ? '🔇' : '🔊';
+    soundToggle.classList.toggle('muted', m);
+  }
+  refreshSoundToggle();
+  soundToggle.addEventListener('click', function(){
+    AudioEngine.resume();
+    AudioEngine.toggleMute();
+    refreshSoundToggle();
+  });
+
+  // grain texture, generated locally (no external assets)
+  (function grain(){
+    var canvas = document.getElementById('grain');
+    var ctx = canvas.getContext('2d');
+    var size = 128;
+    canvas.width = size; canvas.height = size;
+    var imgData = ctx.createImageData(size,size);
+    for(var i=0;i<imgData.data.length;i+=4){
+      var v = Math.random()*255;
+      imgData.data[i]=v; imgData.data[i+1]=v; imgData.data[i+2]=v; imgData.data[i+3]=255;
+    }
+    ctx.putImageData(imgData,0,0);
+    var url = canvas.toDataURL();
+    ctx.clearRect(0,0,size,size);
+    canvas.style.width='100%'; canvas.style.height='100%';
+    canvas.style.backgroundImage = 'url(' + url + ')';
+    canvas.style.backgroundRepeat = 'repeat';
+    canvas.style.backgroundSize = '128px 128px';
+  })();
+
+})();
+</script>
+
+</body>
+</html>
