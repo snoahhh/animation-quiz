@@ -158,6 +158,7 @@
   #hud{
     display:flex; align-items:center; justify-content:space-between;
     gap:16px; padding-bottom:16px; margin-bottom:8px;
+    padding-right:52px;
     border-bottom:1px solid var(--wall-3);
   }
   .door-label{ font-size:12px; color:var(--chalk-dim); letter-spacing:0.12em; }
@@ -542,10 +543,10 @@
     },
     {
       type:'mc5',
-      q:"무료로 쓸 수 있는 스톱모션 앱 중, 초보자에게 가장 추천되는 '추천 1순위' 앱은?",
-      options:["FlipaClip","iKITMovie","Stop Motion Studio","Procreate","Adobe Premiere"],
-      answerIndex:2,
-      explain:"정답은 Stop Motion Studio. 여러 플랫폼을 지원하고 무료로 촬영·편집이 가능해 초보자에게 가장 좋아요."
+      q:"다음 애니메이션 발명품 중 가장 먼저 만들어진 것은 무엇일까?",
+      options:["소마트로프","페나키스토스코프","조에트로프","프락시노스코프","키네토스코프"],
+      answerIndex:0,
+      explain:"정답은 소마트로프(1826년). 이후 페나키스토스코프(1832) → 조에트로프(1834) → 프락시노스코프(1876) 순으로 발명되었어요."
     },
     {
       type:'ox',
@@ -557,7 +558,9 @@
 
   var AudioEngine = (function(){
     var ctx = null, master = null, ambientGain = null, reverb = null;
-    var ambientStarted = false, clangTimer = null, muted = false;
+    var ambientStarted = false, clangTimer = null, melodyTimer = null, melodyStep = 0, muted = false;
+    var AMBIENT_TARGET = 0.38;
+    var MELODY = [220.00, null, 261.63, null, 246.94, 220.00, null, 196.00, null, 220.00, null, null];
 
     try{ muted = localStorage.getItem('schoolhorror_muted') === '1'; }catch(e){}
 
@@ -632,6 +635,32 @@
       o.start(t); o.stop(t+1.7);
     }
 
+    function playMelodyNote(freq){
+      var t = ctx.currentTime;
+      var o = ctx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = freq;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.5, t+0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.85);
+      var send = ctx.createGain(); send.gain.value = 0.5;
+      o.connect(g); g.connect(ambientGain); g.connect(send); send.connect(getReverb());
+      o.start(t); o.stop(t+0.9);
+    }
+
+    function scheduleMelody(){
+      clearTimeout(melodyTimer);
+      melodyTimer = setTimeout(function(){
+        if(ambientStarted){
+          var freq = MELODY[melodyStep % MELODY.length];
+          melodyStep++;
+          if(freq) playMelodyNote(freq);
+        }
+        scheduleMelody();
+      }, 560);
+    }
+
     function startAmbient(){
       ensureCtx();
       if(!ctx || ambientStarted) return;
@@ -643,16 +672,16 @@
 
       var lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
-      lp.frequency.value = 340;
+      lp.frequency.value = 420;
       lp.Q.value = 0.7;
       lp.connect(ambientGain);
 
-      [55, 55*1.008, 82.5].forEach(function(f){
+      [110, 110*1.008, 165].forEach(function(f){
         var o = ctx.createOscillator();
         o.type = 'sine';
         o.frequency.value = f;
         var g = ctx.createGain();
-        g.gain.value = 0.33;
+        g.gain.value = 0.22;
         o.connect(g); g.connect(lp);
         o.start();
       });
@@ -661,12 +690,13 @@
       lfo.type = 'sine';
       lfo.frequency.value = 0.06;
       var lfoGain = ctx.createGain();
-      lfoGain.gain.value = 140;
+      lfoGain.gain.value = 160;
       lfo.connect(lfoGain); lfoGain.connect(lp.frequency);
       lfo.start();
 
-      setAmbientLevel(0.05, 1.2);
+      setAmbientLevel(AMBIENT_TARGET, 1.4);
       scheduleClang();
+      scheduleMelody();
     }
 
     function setAmbientLevel(target, timeConst){
@@ -785,7 +815,7 @@
     return {
       resume: resume,
       startAmbient: startAmbient,
-      setAmbientLevel: setAmbientLevel,
+      restoreAmbient: function(){ setAmbientLevel(AMBIENT_TARGET, 1.0); },
       correct: function(){ playCorrect(); setTimeout(playDoorCreak, 120); },
       wrong: playWrong,
       fail: function(){ setAmbientLevel(0, 1.2); playFailSting(); },
@@ -1145,7 +1175,7 @@
     renderQuestion();
     AudioEngine.resume();
     AudioEngine.startAmbient();
-    AudioEngine.setAmbientLevel(0.05, 1.0);
+    AudioEngine.restoreAmbient();
   }
 
   document.getElementById('btn-start').addEventListener('click', startGame);
